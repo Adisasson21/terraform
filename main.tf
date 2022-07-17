@@ -1,7 +1,7 @@
 provider "aws" {
   region = "${var.region}"
 }
-
+<p> נציין איפה נרצה שהתשתית שלנו תפעל </p>
 
 resource "aws_vpc" "vpc" {
   cidr_block       = "${var.vpc-cidr}"  # variable of the vpc ip
@@ -13,6 +13,7 @@ resource "aws_vpc" "vpc" {
   }
 }
 
+<p> הענן הפרטי מאפשר לנו לבודד את הענן בין לקוחות שונים  </p>
 
 resource "aws_internet_gateway" "internet-gateway" {
   vpc_id = aws_vpc.vpc.id
@@ -23,10 +24,13 @@ resource "aws_internet_gateway" "internet-gateway" {
 
 
 # Route table for Public Subnets
-resource "aws_route_table" "public-route-table" {    # Creating RT for Public Subnet
+<p> ניתוב המידע,  היא בעצם אחראית לאן תופנה תעבורת הרשת מהתת רשת </p>
+<p> הניתוב הזה הוא קישור של המידע המועבר מהנתב לרשת החיצונית (האינטרנט) </p>
+  
+resource "aws_route_table" "public-route-table" {   
   vpc_id =  aws_vpc.vpc.id
   route {
-    cidr_block = "0.0.0.0/0"               # Traffic from Public Subnet reaches Internet via Internet Gateway
+    cidr_block = "0.0.0.0/0"              
     gateway_id = aws_internet_gateway.internet-gateway.id
      }
   tags = {
@@ -35,7 +39,14 @@ resource "aws_route_table" "public-route-table" {    # Creating RT for Public Su
  }
 
 
-# 2 Public Subnet
+  
+#Subnet
+<p> היא חלק מרשת גדולה, היא נועדה לעזור לזרימת תעבורת הרשת להיות יותר יעילה </p>
+  
+# Public Subnet
+<p> היא רשת משנה שמאפשרת למופעים ברשת להיות נגישים לאינטרנט ואנשים יש גישה לאותם מופעים דרך האינטרנט </p>
+<p>  נבחר ברשת משנה כזאת כאשר מופעים חייבים להיות בתקשורת עם האינטרנט לדוגמא: בלוג </p>
+
 resource "aws_subnet" "public-subnet-1" {
   vpc_id     = aws_vpc.vpc.id
   cidr_block = "${var.public-subnet-1-cidr}"
@@ -43,7 +54,6 @@ resource "aws_subnet" "public-subnet-1" {
     Name = "Public Subnet 1"
   }
 }
-
 
 resource "aws_subnet" "public-subnet-2" {
   vpc_id     = aws_vpc.vpc.id
@@ -54,7 +64,9 @@ resource "aws_subnet" "public-subnet-2" {
 }
 
 
-# 2 Private Subnet
+# Private Subnet
+<p>רשת משנה פרטים נועדה כדי לאבטח מופעי קצה שאינם צריכים להיות מחוברים לאינטרנט </p>
+
 resource "aws_subnet" "private-subnet-1" {
   vpc_id                   = aws_vpc.vpc.id
   cidr_block               = "${var.private-subnet-1-cidr}"
@@ -72,8 +84,9 @@ resource "aws_subnet" "private-subnet-2" {
   }
 }
 
-
 #Route table Association with Public Subnets
+<p> ניתב המידע מהתת רשת אל הנתב, לנתב אחד יכולים להיות כמה רשתות משנה שמחוברות אליו אבל רשת משנה לא יכולה להיות מחוברת לכמה נתבים שונים</p>
+<p> שני הרשתות משנה הציבוריות שיצרתי מחוברת לאותו נתב</p>
 resource "aws_route_table_association" "public-subnet-1-route-table-association" {
   subnet_id = aws_subnet.public-subnet-1.id
   route_table_id = aws_route_table.public-route-table.id
