@@ -119,3 +119,74 @@ tags = {
     Name= "security_group_public_80_443"
   }
 }
+
+resource "aws_alb" "Elastic_load_balance" {
+  subnets = [aws_subnet.public-subnet-1.id]
+  security_groups = [aws_security_group.security_group_public_80_443.id]
+
+  tags = {
+    Name = "terraform-elb"
+  }
+}
+
+
+resource "aws_alb_target_group" "group" {
+  name     = "terraform-example-alb-target"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.vpc.id
+  stickiness {
+    type = "lb_cookie"
+  }
+
+  # Alter the destination of the health check to be the login page.
+  health_check {
+    path = "/login"
+    port = 80
+  }
+}
+
+
+resource "aws_alb_listener" "listener_http" {
+  load_balancer_arn = aws_alb.Elastic_load_balance.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = aws_alb_target_group.group.arn
+    type             = "forward"
+  }
+}
+
+
+resource "aws_alb_listener" "listener_https" {
+  load_balancer_arn = aws_alb.Elastic_load_balance.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy"
+  default_action {
+    target_group_arn = aws_alb_target_group.group.arn
+    type             = "forward"
+  }
+}
+
+
+resource "aws_route53_record" "CNAME_record" {
+  name = "example.com"
+  type = "CNAME"
+  zone_id = aws_route53_zone.private.zone_id
+  ttl     = "300"
+  records = ["CNAME_record.example.com"]
+  }
+
+
+resource "aws_route53_zone" "private" {
+  name = "example.com"
+  vpc {
+   vpc_id = aws_vpc.vpc.id
+  }
+  tags = {
+    Name = "terraform-elb"
+  }
+}
+
