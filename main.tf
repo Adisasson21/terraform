@@ -130,23 +130,6 @@ resource "aws_alb" "Elastic_load_balance" {
 }
 
 
-resource "aws_alb_target_group" "group" {
-  name     = "terraform-example-alb-target"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.vpc.id
-  stickiness {
-    type = "lb_cookie"
-  }
-
-  # Alter the destination of the health check to be the login page.
-  health_check {
-    path = "/login"
-    port = 80
-  }
-}
-
-
 resource "aws_alb_listener" "listener_http" {
   load_balancer_arn = aws_alb.Elastic_load_balance.arn
   port              = "80"
